@@ -1,8 +1,10 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import icon from '../../assets/icon.svg';
 import './App.css';
 
-const Hello = () => {
+const Hello = (props: { onlineFlag: boolean }) => {
+  const { onlineFlag } = props;
   return (
     <div>
       <div className="Hello">
@@ -35,15 +37,33 @@ const Hello = () => {
           </button>
         </a>
       </div>
+      <button
+        type="button"
+        onClick={() => {
+          window.electron.networkState.sendNetworkState(navigator.onLine);
+        }}
+      >
+        test
+      </button>
+      <div>{onlineFlag ? 'online' : 'offline'}</div>
     </div>
   );
 };
 
 export default function App() {
+  const [onlineFlag, setOnlineFlag] = useState<boolean>(navigator.onLine);
+  const changeOnlineFlage = () => {
+    if (navigator.onLine) setOnlineFlag(true);
+    else setOnlineFlag(false);
+  };
+  useEffect(() => {
+    window.addEventListener('online', changeOnlineFlage);
+    window.addEventListener('offline', changeOnlineFlage);
+  });
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Hello />} />
+        <Route path="/" element={<Hello onlineFlag={onlineFlag} />} />
       </Routes>
     </Router>
   );

@@ -11,11 +11,12 @@
 import path from 'path';
 // The app module, which controls your application's event lifecycle.应用的生命周期
 // The BrowserWindow module, which creates and manages application windows.新建和管理应用窗口
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, IpcMainEvent } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import { getNetworkProfile } from './network';
 
 class AppUpdater {
   constructor() {
@@ -27,6 +28,7 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
+// 主进程监听 ipc-example 通道
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
   console.log(msgTemplate(arg));
@@ -87,6 +89,7 @@ const createWindow = async () => {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')
         : path.join(__dirname, '../../.erb/dll/preload.js'),
+      // 使用 node.js 提供的能力 __dirname 获取当前路径，配合 path.join() 来进行相对引用，消除开发和打包中你的影响
     },
   });
 
@@ -134,6 +137,13 @@ app.on('window-all-closed', () => {
   }
 });
 
+const getNetworkState = (event: IpcMainEvent, networkOnlineState: boolean) => {
+  // if (!networkOnlineState) {
+  //   getNetworkProfile();
+  // }
+  getNetworkProfile();
+};
+
 // In Electron, browser windows can only be created after the app module's ready event is fired.
 // You can wait for this event by using the app.whenReady() API.
 // Call createWindow() after whenReady() resolves its Promise.
@@ -142,6 +152,7 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
+    ipcMain.on('network-state', getNetworkState);
     createWindow();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the

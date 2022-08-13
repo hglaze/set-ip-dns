@@ -18,4 +18,9 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.once(channel, (_event, ...args) => func(...args));
     },
   },
+  networkState: {
+    sendNetworkState(state: boolean) {
+      ipcRenderer.send('network-state', state);
+    },
+  },
 });

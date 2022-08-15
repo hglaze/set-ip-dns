@@ -1,13 +1,15 @@
 import iconv from 'iconv-lite';
 import { exec } from 'child_process';
 
-const getNetworkProfile = () => {
+const defaultCodePage = '936';
+
+const getNetworkProfile = (codePage: string | undefined) => {
   exec(
     'Get-NetConnectionProfile',
     { shell: 'powershell.exe', encoding: 'hex' },
     (error, stdout, stderr) => {
       const buff = iconv.encode(stdout, 'hex');
-      console.log(iconv.decode(buff, '936'));
+      console.log(iconv.decode(buff, codePage || defaultCodePage));
     }
   );
 };

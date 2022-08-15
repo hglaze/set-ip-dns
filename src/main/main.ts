@@ -14,9 +14,11 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, IpcMainEvent } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import Store from 'electron-store';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { getNetworkProfile } from './network';
+import getPageCode from './commend';
 
 class AppUpdater {
   constructor() {
@@ -137,11 +139,25 @@ app.on('window-all-closed', () => {
   }
 });
 
+const store = new Store();
+
+let codePage: string | undefined;
+if (!store.get('pageCode')) {
+  getPageCode()
+    .then((code) => {
+      store.set('pageCode', code);
+      codePage = code;
+    })
+    .catch((err) => console.log(err));
+} else {
+  codePage = store.get('pageCode') as string;
+}
+
 const getNetworkState = (event: IpcMainEvent, networkOnlineState: boolean) => {
   // if (!networkOnlineState) {
   //   getNetworkProfile();
   // }
-  getNetworkProfile();
+  getNetworkProfile(codePage);
 };
 
 // In Electron, browser windows can only be created after the app module's ready event is fired.

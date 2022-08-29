@@ -52,18 +52,36 @@ const Hello = (props: { onlineFlag: boolean }) => {
 
 export default function App() {
   const [onlineFlag, setOnlineFlag] = useState<boolean>(navigator.onLine);
+  const [networkProfileType, setNetworkProfileType] = useState<boolean>(false);
   const changeOnlineFlage = () => {
     if (navigator.onLine) setOnlineFlag(true);
     else setOnlineFlag(false);
+    console.log('navigator.onLine');
+    window.electron.networkService
+      .sendNetworkState(navigator.onLine)
+      .then((networkProfileInfo) => {
+        if (networkProfileInfo.type) {
+          setNetworkProfileType(true);
+        }
+        console.log('未连接无线网络');
+        return null;
+      })
+      .catch(console.log);
   };
   useEffect(() => {
+    changeOnlineFlage();
     window.addEventListener('online', changeOnlineFlage);
     window.addEventListener('offline', changeOnlineFlage);
-  });
+  }, []);
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Hello onlineFlag={onlineFlag} />} />
+        <Route
+          path="/"
+          element={
+            networkProfileType ? <Hello onlineFlag={onlineFlag} /> : <></>
+          }
+        />
       </Routes>
     </Router>
   );

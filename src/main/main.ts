@@ -17,8 +17,13 @@ import log from 'electron-log';
 import Store from 'electron-store';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { getNetworkProfile } from './network';
+import { getNetworkProfile, getNodejsNetwork } from './network';
 import getPageCode from './commend';
+import { NetworkProfile, NoNetworkProfile } from './main.d';
+
+const GLOBAL_CONST = {
+  Network_Type_Support: 'WLAN',
+} as const;
 
 class AppUpdater {
   constructor() {
@@ -141,7 +146,7 @@ app.on('window-all-closed', () => {
 
 const store = new Store();
 
-let codePage: string | undefined;
+let codePage: string;
 if (!store.get('pageCode')) {
   getPageCode()
     .then((code) => {
@@ -153,12 +158,52 @@ if (!store.get('pageCode')) {
   codePage = store.get('pageCode') as string;
 }
 
+/**
+ * 获取当前的网络状态
+ * @param event
+ * @param networkOnlineState
+ */
 const getNetworkState = (event: IpcMainEvent, networkOnlineState: boolean) => {
   // if (!networkOnlineState) {
   //   getNetworkProfile();
   // }
-  getNetworkProfile(codePage);
+  getNetworkProfile(codePage)
+    .then((networkProfile) => {
+      if (networkProfile === GLOBAL_CONST.Network_Type_Support) {
+        console.log(networkProfile);
+        event.reply('network-state', networkProfile);
+      } else {
+        event.reply('network-statee', false);
+      }
+    })
+    .catch((err) => {});
+  // getNodejsNetwork();
 };
+
+ipcMain.handle(
+  'network-server-state',
+  (event, state): Promise<NetworkProfile | NoNetworkProfile> => {
+    if (state) {
+      getNetworkProfile(codePage)
+        .then((networkProfile) => {
+          if (networkProfile === GLOBAL_CONST.Network_Type_Support) {
+            return {
+              type: true,
+              networkProfile,
+            };
+          }
+          return {
+            type: false,
+          };
+        })
+        .catch((err) => {});
+    }
+    return Promise.resolve({
+      type: false,
+    });
+  }
+);
+ipcMain.on('network-state', getNetworkState);
 
 // In Electron, browser windows can only be created after the app module's ready event is fired.
 // You can wait for this event by using the app.whenReady() API.
@@ -168,7 +213,6 @@ const getNetworkState = (event: IpcMainEvent, networkOnlineState: boolean) => {
 app
   .whenReady()
   .then(() => {
-    ipcMain.on('network-state', getNetworkState);
     createWindow();
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the

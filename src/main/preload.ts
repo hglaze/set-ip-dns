@@ -23,4 +23,8 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('network-state', state);
     },
   },
+  networkService: {
+    sendNetworkState: (state: boolean) =>
+      ipcRenderer.invoke('network-server-state', state),
+  },
 });

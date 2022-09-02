@@ -2,7 +2,7 @@ import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import icon from '../../assets/icon.svg';
 import './App.css';
-import NotWlan from './NotWlan';
+import NoWLAN from './components/NoWLAN';
 
 const Hello = (props: { onlineFlag: boolean }) => {
   const { onlineFlag } = props;
@@ -92,7 +92,7 @@ export default function App() {
             onlineFlag && networkProfileType ? (
               <Hello onlineFlag={onlineFlag} />
             ) : (
-              <NotWlan />
+              <NoWLAN />
             )
           }
         />

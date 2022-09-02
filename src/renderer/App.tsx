@@ -2,6 +2,7 @@ import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import icon from '../../assets/icon.svg';
 import './App.css';
+import NotWlan from './NotWlan';
 
 const Hello = (props: { onlineFlag: boolean }) => {
   const { onlineFlag } = props;
@@ -51,27 +52,36 @@ const Hello = (props: { onlineFlag: boolean }) => {
 };
 
 export default function App() {
-  const [onlineFlag, setOnlineFlag] = useState<boolean>(navigator.onLine);
+  const [onlineFlag, setOnlineFlag] = useState<boolean>(false);
   const [networkProfileType, setNetworkProfileType] = useState<boolean>(false);
+  const [paddingFlage, setPaddingFlage] = useState<boolean>(true);
+
   const changeOnlineFlage = () => {
-    if (navigator.onLine) setOnlineFlag(true);
-    else setOnlineFlag(false);
-    console.log('navigator.onLine');
-    window.electron.networkService
-      .sendNetworkState(navigator.onLine)
-      .then((networkProfileInfo) => {
-        if (networkProfileInfo.type) {
-          setNetworkProfileType(true);
-        }
-        console.log('未连接无线网络');
-        return null;
-      })
-      .catch(console.log);
+    const onlineState = navigator.onLine;
+    if (onlineState) {
+      setOnlineFlag(true);
+      window.electron.networkService
+        .sendNetworkState(onlineState)
+        .then((networkProfileInfo) => {
+          console.log(networkProfileInfo);
+          if (networkProfileInfo.type) {
+            setNetworkProfileType(true);
+          } else {
+            console.log('未连接无线网络');
+          }
+          return null;
+        })
+        .catch(console.log);
+    } else setOnlineFlag(false);
   };
   useEffect(() => {
     changeOnlineFlage();
     window.addEventListener('online', changeOnlineFlage);
     window.addEventListener('offline', changeOnlineFlage);
+    return () => {
+      window.removeEventListener('online', changeOnlineFlage);
+      window.removeEventListener('offline', changeOnlineFlage);
+    };
   }, []);
   return (
     <Router>
@@ -79,7 +89,11 @@ export default function App() {
         <Route
           path="/"
           element={
-            networkProfileType ? <Hello onlineFlag={onlineFlag} /> : <></>
+            onlineFlag && networkProfileType ? (
+              <Hello onlineFlag={onlineFlag} />
+            ) : (
+              <NotWlan />
+            )
           }
         />
       </Routes>

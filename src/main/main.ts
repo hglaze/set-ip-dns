@@ -184,19 +184,17 @@ ipcMain.handle(
   'network-server-state',
   (event, state): Promise<NetworkProfile | NoNetworkProfile> => {
     if (state) {
-      getNetworkProfile(codePage)
-        .then((networkProfile) => {
-          if (networkProfile === GLOBAL_CONST.Network_Type_Support) {
-            return {
-              type: true,
-              networkProfile,
-            };
-          }
+      return getNetworkProfile(codePage).then((networkProfile) => {
+        if (networkProfile === GLOBAL_CONST.Network_Type_Support) {
           return {
-            type: false,
+            type: true,
+            networkProfile,
           };
-        })
-        .catch((err) => {});
+        }
+        return {
+          type: false,
+        };
+      });
     }
     return Promise.resolve({
       type: false,

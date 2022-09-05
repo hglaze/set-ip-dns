@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import icon from '../../assets/icon.svg';
 import './App.css';
 import NoWLAN from './components/NoWLAN';
+import LocalRoot from './components/local/root';
 
 const Hello = (props: { onlineFlag: boolean }) => {
   const { onlineFlag } = props;
@@ -95,7 +96,12 @@ export default function App() {
               <NoWLAN />
             )
           }
-        />
+        >
+          {/* <Route path=":configId" element={<LocalInfo />} />
+            <Route path=":configId/edit" element={<LocalEdit />} /> */}
+          {/* </Route> */}
+        </Route>
+        <Route path="/config" element={<LocalRoot />} />
       </Routes>
     </Router>
   );

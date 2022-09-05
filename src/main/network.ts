@@ -7,9 +7,9 @@ import { exec } from 'child_process';
 /**
  * promise 的方式获取当前连接的网络接口名（WLAN 或以太网）
  * @param {string} codePage  Windows 的活动代码
- * @returns {string} 返回当前连接网络的接口名，用来获取对应的 ip
+ * @returns {string[]} 返回当前连接网络的接口名数组，用来获取对应的 ip
  */
-const getNetworkProfile = (codePage = '936'): Promise<string> =>
+const getNetworkProfile = (codePage = '936'): Promise<string[]> =>
   util
     .promisify(exec)('Get-NetConnectionProfile', {
       shell: 'powershell.exe',
@@ -17,12 +17,13 @@ const getNetworkProfile = (codePage = '936'): Promise<string> =>
     })
     .then((networkProfileAns) => {
       const buff = iconv.encode(networkProfileAns.stdout, 'hex');
-      const networkProfileReg = /(?<=InterfaceAlias {3}: )\S*/;
+      const networkProfileReg = /(?<=InterfaceAlias {1,}: )\S*/g;
       const networkProfileStr = iconv.decode(buff, codePage);
-      const RegAns = networkProfileReg.exec(networkProfileStr);
+      // const RegAns = networkProfileReg.exec(networkProfileStr);
+      const RegAns = networkProfileStr.match(networkProfileReg);
       return new Promise((resolve, reject) => {
         if (RegAns) {
-          resolve(RegAns[0]);
+          resolve(RegAns);
         } else {
           const errCannotGetNetworkProfile = new Error(
             chalk.whiteBright.bgRed.bold('无法获取网络接口')

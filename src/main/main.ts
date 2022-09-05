@@ -169,9 +169,9 @@ const getNetworkState = (event: IpcMainEvent, networkOnlineState: boolean) => {
   // }
   getNetworkProfile(codePage)
     .then((networkProfile) => {
-      if (networkProfile === GLOBAL_CONST.Network_Type_Support) {
+      if (networkProfile.indexOf(GLOBAL_CONST.Network_Type_Support) >= 0) {
         console.log(networkProfile);
-        event.reply('network-state', networkProfile);
+        event.reply('network-state', GLOBAL_CONST.Network_Type_Support);
       } else {
         event.reply('network-statee', false);
       }
@@ -185,10 +185,10 @@ ipcMain.handle(
   (event, state): Promise<NetworkProfile | NoNetworkProfile> => {
     if (state) {
       return getNetworkProfile(codePage).then((networkProfile) => {
-        if (networkProfile === GLOBAL_CONST.Network_Type_Support) {
+        if (networkProfile.indexOf(GLOBAL_CONST.Network_Type_Support) >= 0) {
           return {
             type: true,
-            networkProfile,
+            networkProfile: GLOBAL_CONST.Network_Type_Support,
           };
         }
         return {
